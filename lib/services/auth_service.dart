@@ -12,7 +12,7 @@ class AuthService {
       required BuildContext context}) async {
     if (email.isEmpty || password.isEmpty) {
       Fluttertoast.showToast(
-        msg: 'Email and password cannot be empty.',
+        msg: 'Email or password cannot be empty.',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.SNACKBAR,
         backgroundColor: Colors.black54,
@@ -62,7 +62,7 @@ class AuthService {
       required BuildContext context}) async {
     if (email.isEmpty || password.isEmpty) {
       Fluttertoast.showToast(
-        msg: 'Email and password cannot be empty.',
+        msg: 'Email or password cannot be empty.',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.SNACKBAR,
         backgroundColor: Colors.black54,
