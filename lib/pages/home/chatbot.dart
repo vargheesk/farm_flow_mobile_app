@@ -17,7 +17,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
   ChatUser currentUser = ChatUser(id: "0", firstName: "User");
   ChatUser geminiUser = ChatUser(
     id: "1",
-    firstName: "chappy",
+    firstName: "Folium",
     profileImage:
         "https://i0.wp.com/arktimes.com/wp-content/uploads/2019/04/2247958-movie_review1-1.jpg?fit=600%2C570&ssl=1",
   );
@@ -66,9 +66,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
     StringBuffer fullResponse = StringBuffer();
 
     gemini.promptStream(
-      parts: [Part.text(chatMessage.text)],
+      parts: [
+        Part.text(
+            " Act as a chatbot named Folium, the official chatbot of the FarmFlow app. Your purpose is to assist users with agriculture-related queries by providing accurate and helpful information ," +
+                chatMessage.text)
+      ],
     ).listen((event) {
-      fullResponse.write(event?.output ?? ' ');
+      fullResponse.write(event?.output ?? '');
 
       setState(() {
         messages[0] = ChatMessage(
