@@ -1,34 +1,65 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
 import '../pages/home/home.dart';
+import '../pages/home/UserSelectOffice.dart';
 import '../pages/login/login.dart';
 
 class AuthService {
-  Future<void> signup(
-      {required String email,
-      required String password,
-      required BuildContext context}) async {
-    if (email.isEmpty || password.isEmpty) {
-      Fluttertoast.showToast(
-        msg: 'Email or password cannot be empty.',
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.SNACKBAR,
-        backgroundColor: Colors.black54,
-        textColor: Colors.white,
-        fontSize: 14.0,
-      );
-      return;
-    }
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
 
-    try {
-      await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
+  // Stream to listen to auth state changes
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-      await Future.delayed(const Duration(seconds: 1));
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (BuildContext context) => const Home()));
+  // Method to get current user
+  User? get currentUser => _auth.currentUser;
+
+  // Wrapper widget to handle auth state
+  static Widget handleAuthState(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (BuildContext context, snapshot) {
+        if (snapshot.hasData) {
+          return const Home();
+        } else {
+          return Login();
+        }
+      },
+    );
+  }
+
+  Future<void> signup({
+  required String name,
+  required String email,
+  required String phone,
+  required String password,
+  required String profilePicLink,
+  required String role,
+  required BuildContext context,
+}) async {
+  if (email.isEmpty || password.isEmpty || name.isEmpty) {
+    Fluttertoast.showToast(msg: 'Required fields cannot be empty');
+    return;
+  }
+
+  try {
+    UserCredential userCredential = await _auth
+        .createUserWithEmailAndPassword(email: email, password: password);
+
+    // Save additional user data to Firestore
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(userCredential.user?.uid)
+        .set({
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'profilePicLink': profilePicLink,
+      'role': role, // Add role field
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+      // No need to navigate manually as StreamBuilder will handle it
     } on FirebaseAuthException catch (e) {
       String message = '';
       if (e.code == 'weak-password') {
@@ -56,10 +87,11 @@ class AuthService {
     }
   }
 
-  Future<void> signin(
-      {required String email,
-      required String password,
-      required BuildContext context}) async {
+  Future<void> signin({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
     if (email.isEmpty || password.isEmpty) {
       Fluttertoast.showToast(
         msg: 'Email or password cannot be empty.',
@@ -73,12 +105,27 @@ class AuthService {
     }
 
     try {
-      await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
 
-      await Future.delayed(const Duration(seconds: 1));
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (BuildContext context) => const Home()));
+      final user = _auth.currentUser;
+      if (user != null) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(user.uid)
+            .get();
+
+        if (!userDoc.data()!.containsKey('state')) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfileCompletion()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const Home()),
+          );
+        }
+      }
     } on FirebaseAuthException catch (e) {
       String message = '';
       if (e.code == 'invalid-email') {
@@ -107,9 +154,7 @@ class AuthService {
   }
 
   Future<void> signout({required BuildContext context}) async {
-    await FirebaseAuth.instance.signOut();
-    await Future.delayed(const Duration(seconds: 1));
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (BuildContext context) => Login()));
+    await _auth.signOut();
+    // No need to navigate manually as StreamBuilder will handle it
   }
 }
