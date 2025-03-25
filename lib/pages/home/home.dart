@@ -74,14 +74,32 @@ class _HomeState extends State<Home> {
         selectedItemColor: Colors.green[800],
         onTap: _onItemTapped,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ChatbotPage()),
+// In home.dart, update the FloatingActionButton
+      floatingActionButton: FutureBuilder<DocumentSnapshot>(
+        future: FirebaseFirestore.instance
+            .collection('Users')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .get(),
+        builder: (context, snapshot) {
+          String profileImage =
+              "https://static.vecteezy.com/system/resources/previews/007/296/447/non_2x/user-icon-in-flat-style-person-icon-client-symbol-vector.jpg";
+          if (snapshot.hasData) {
+            profileImage = snapshot.data!.get('profilePicLink') as String;
+          }
+          return FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ChatbotPage(userProfileImage: profileImage),
+                ),
+              );
+            },
+            backgroundColor: Colors.green,
+            child: const Icon(Icons.chat_rounded, color: Colors.white),
           );
         },
-        child: const Icon(Icons.chat_rounded),
       ),
     );
   }
