@@ -3,12 +3,16 @@ import 'package:app2/pages/home/Leaf_Scan.dart';
 import 'package:app2/pages/home/Plant_Shop.dart';
 import 'package:app2/pages/home/chatbot.dart';
 import 'package:app2/services/auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:ui';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:app2/pages/home/profile.dart';
+import 'package:app2/pages/home/shop_owner_form.dart';
+import 'package:app2/pages/home/ShopProfilePage.dart';
+import 'package:app2/pages/home/shopProductPage.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -18,200 +22,254 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final List<Widget> pages = [
-    const Govt_info(),
-    const Leaf_Scan(),
-    const Plant_Shop(),
+  int _selectedIndex = 0;
+  final List<Widget> _pages = const [
+    Govt_info(),
+    Leaf_Scan(),
+    Plant_Shop(),
   ];
-
-  int currentPage = 0;
 
   @override
   void initState() {
     super.initState();
-    // Initialize Gemini
     Gemini.init(
       apiKey: "AIzaSyBRNcb_e0MSUfPin7l5I77lUMDA8UFaGUU",
     );
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: pages[currentPage],
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('Farm Flow'),
-      ),
       drawer: const NavigationDrawer(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ChatbotPage()),
-          );
-        },
-        child: const Icon(Icons.chat_rounded),
+      appBar: AppBar(
+        title: const Text('FarmFlow'),
+        backgroundColor: const Color.fromARGB(255, 195, 245, 197),
+      ),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentPage,
-        onTap: (value) {
-          setState(() {
-            currentPage = value;
-          });
-        },
-        items: const [
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.info_outline_rounded),
-            label: "Govt info",
+            icon: Icon(Icons.info_outline),
+            label: 'Govt Info',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.lens_blur_outlined),
-            label: "Scan leaf",
+            icon: Icon(Icons.camera_alt),
+            label: 'Scan Leaf',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.store_outlined),
-            label: "Plant Shop",
+            icon: Icon(Icons.shopping_cart),
+            label: 'Plant Shop',
           ),
         ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.green[800],
+        onTap: _onItemTapped,
+      ),
+// In home.dart, update the FloatingActionButton
+      floatingActionButton: FutureBuilder<DocumentSnapshot>(
+        future: FirebaseFirestore.instance
+            .collection('Users')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .get(),
+        builder: (context, snapshot) {
+          String profileImage =
+              "https://static.vecteezy.com/system/resources/previews/007/296/447/non_2x/user-icon-in-flat-style-person-icon-client-symbol-vector.jpg";
+          if (snapshot.hasData) {
+            profileImage = snapshot.data!.get('profilePicLink') as String;
+          }
+          return FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ChatbotPage(userProfileImage: profileImage),
+                ),
+              );
+            },
+            backgroundColor: Colors.green,
+            child: const Icon(Icons.chat_rounded, color: Colors.white),
+          );
+        },
       ),
     );
   }
 }
 
+// NavigationDrawer remains the same as in original code
 class NavigationDrawer extends StatelessWidget {
   const NavigationDrawer({super.key});
 
   @override
   Widget build(BuildContext context) => Drawer(
-        backgroundColor: Colors.transparent,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            backgroundBlendMode: BlendMode.srcOver,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 10,
-              ),
-            ],
+            color: Colors.white.withOpacity(0.95),
           ),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  buildHeader(context),
-                  buildMenuItems(context),
-                ],
-              ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                buildHeader(context),
+                buildMenuItems(context),
+              ],
             ),
           ),
         ),
       );
 
-  Widget buildHeader(BuildContext context) => Container(
-        padding: EdgeInsets.only(
-          top: 24 + MediaQuery.of(context).padding.top,
-          bottom: 24,
-        ),
-        child: Column(
-          children: [
-            const CircleAvatar(
-              radius: 52,
-              backgroundImage: NetworkImage(
-                  "https://static.vecteezy.com/system/resources/previews/007/296/447/non_2x/user-icon-in-flat-style-person-icon-client-symbol-vector.jpg"),
+  Widget buildHeader(BuildContext context) => FutureBuilder<DocumentSnapshot>(
+        future: FirebaseFirestore.instance
+            .collection('Users')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .get(),
+        builder: (context, snapshot) {
+          String name = "Loading...";
+          String profilePic =
+              "https://static.vecteezy.com/system/resources/previews/007/296/447/non_2x/user-icon-in-flat-style-person-icon-client-symbol-vector.jpg";
+
+          if (snapshot.hasData) {
+            name = snapshot.data!.get('name') as String;
+            profilePic = snapshot.data!.get('profilePicLink') as String;
+          }
+
+          return Container(
+            padding: EdgeInsets.only(
+              top: 24 + MediaQuery.of(context).padding.top,
+              bottom: 24,
             ),
-            const SizedBox(height: 12),
-            const Text(
-              "users name",
-              style: TextStyle(
-                  fontSize: 28, color: Color.fromARGB(255, 255, 255, 255)),
+            color: const Color.fromARGB(255, 26, 103, 30),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 52,
+                  backgroundImage: NetworkImage(profilePic),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  name,
+                  style: const TextStyle(
+                      fontSize: 28,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  FirebaseAuth.instance.currentUser!.email!,
+                  style: GoogleFonts.raleway(
+                      textStyle: const TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16)),
+                ),
+              ],
             ),
-            Text(
-              FirebaseAuth.instance.currentUser!.email!.toString(),
-              style: GoogleFonts.raleway(
-                  textStyle: const TextStyle(
-                      color: Color.fromARGB(255, 230, 230, 230),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20)),
-            ),
-          ],
-        ),
+          );
+        },
       );
 
   Widget buildMenuItems(BuildContext context) => Container(
         padding: const EdgeInsets.all(24),
-        child: Wrap(
-          runSpacing: 16,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.person_outline_outlined,
-                  color: Colors.white),
-              title: const Text(
-                'Profile',
-                style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
-              ),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.store, color: Colors.white),
-              title: const Text(
-                'Become Shop Owner',
-                style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
-              ),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline, color: Colors.white),
-              title: const Text(
-                'About Us',
-                style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
-              ),
-              onTap: () {},
-            ),
-            ListTile(
-                leading:
-                    const Icon(Icons.bug_report_rounded, color: Colors.white),
-                title: const Text(
-                  'Report bug',
-                  style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+        child: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('Users')
+              .doc(FirebaseAuth.instance.currentUser!.uid)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return const CircularProgressIndicator();
+
+            String role = snapshot.data?.get('role') ?? 'user';
+
+            return Wrap(
+              runSpacing: 16,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.person_outline),
+                  title: const Text('Profile'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ProfilePage()),
+                    );
+                  },
                 ),
-                onTap: () async {
-                  launchUrl(Uri.parse(
-                      "mailto:farmflow2025@gmail.com?subject=Reporting a BUG in FarmFlow"));
-                }),
-            ListTile(
-                leading: const Icon(Icons.email_rounded, color: Colors.white),
-                title: const Text(
-                  'Contact Us',
-                  style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+                if (role != 'shop-owner')
+                  ListTile(
+                    leading: const Icon(Icons.store),
+                    title: const Text('Become Shop Owner'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ShopOwnerForm()),
+                      );
+                    },
+                  ),
+                if (role == 'shop-owner') ...[
+                  ListTile(
+                    leading: const Icon(Icons.store),
+                    title: const Text('Shop Profile'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ShopProfile()),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.shopping_bag),
+                    title: const Text('Shop Page'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ShopPage()),
+                      );
+                    },
+                  ),
+                ],
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('About Us'),
+                  onTap: () {},
                 ),
-                onTap: () async {
-                  launchUrl(Uri.parse(
-                      "mailto:farmflow2025@gmail.com?subject=Enquring about FarmFlow"));
-                }),
-            const Divider(color: Color.fromARGB(255, 212, 212, 212)),
-            ListTile(
-              leading: const Icon(Icons.logout_rounded, color: Colors.white),
-              title: const Text(
-                'Logout',
-                style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
-              ),
-              onTap: () async {
-                await AuthService().signout(context: context);
-              },
-            ),
-          ],
+                ListTile(
+                  leading: const Icon(Icons.bug_report),
+                  title: const Text('Report Bug'),
+                  onTap: () async {
+                    launchUrl(Uri.parse(
+                        "mailto:farmflow2025@gmail.com?subject=Reporting a BUG in FarmFlow"));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.email),
+                  title: const Text('Contact Us'),
+                  onTap: () async {
+                    launchUrl(Uri.parse(
+                        "mailto:farmflow2025@gmail.com?subject=Enquiring about FarmFlow"));
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.logout),
+                  title: const Text('Logout'),
+                  onTap: () async {
+                    await AuthService().signout(context: context);
+                  },
+                ),
+              ],
+            );
+          },
         ),
       );
 }
-
-String? encodeQueryParameters(Map<String, String> params) {
-  return params.entries
-      .map((MapEntry<String, String> e) =>
-          '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
-      .join('&');
-}
-
