@@ -4,6 +4,8 @@ import 'package:app2/services/auth_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
+import 'app_theme.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -18,6 +20,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: AuthService.handleAuthState(context),
+      // theme: AppTheme.lightTheme,
+      // darkTheme: AppTheme.lightTheme,
+      // themeMode: ThemeMode.light,
     );
   }
 }

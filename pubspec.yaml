@@ -79,6 +79,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
+  flutter_native_splash: ^2.2.19
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -95,7 +96,24 @@ flutter:
     - assets/efficientnet_v2.tflite
     - assets/efficientnet_v2-labels.txt
     - assets\leafornonleaf.tflite
+    
 
+flutter_native_splash:
+  # Light mode
+  color: "#FFFFFF"   # White background
+  image: assets/splash_logo.png  # Your logo
+  
+  # Dark mode (override to same white)
+  color_dark: "#FFFFFF"  # Force white in dark mode
+  image_dark: assets/splash_logo.png  # Same logo for dark mode
+  
+  # Disable dark mode branding
+  branding: 
+  branding_dark: 
+  
+  # Apply to both platforms
+  android: true
+  ios: true
 
   # To add assets to your application, add an assets section, like this:
   # assets:

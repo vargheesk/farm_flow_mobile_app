@@ -234,7 +234,7 @@ class _Plant_ShopState extends State<Plant_Shop> {
     return Scaffold(
       body: SafeArea(
         child: Container(
-          color: const Color.fromARGB(255, 195, 245, 197),
+          color: const Color.fromARGB(255, 170, 191, 163),
           child: Column(
             children: [
               // Header Section
@@ -252,7 +252,7 @@ class _Plant_ShopState extends State<Plant_Shop> {
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 26, 103, 30),
+                            color: Color.fromARGB(255, 19, 40, 20),
                           ),
                         ),
                         IconButton(

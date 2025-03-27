@@ -498,7 +498,7 @@ class _Govt_infoState extends State<Govt_info> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        color: const Color.fromARGB(255, 195, 245, 197),
+        color: const Color.fromARGB(255, 170, 191, 163),
         child: Column(
           children: [
             Padding(
@@ -511,7 +511,7 @@ class _Govt_infoState extends State<Govt_info> {
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 26, 103, 30),
+                      color: Color.fromARGB(255, 19, 40, 20),
                     ),
                   ),
                   const SizedBox(height: 16),

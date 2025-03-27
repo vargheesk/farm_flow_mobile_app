@@ -49,7 +49,7 @@ class _HomeState extends State<Home> {
       drawer: const NavigationDrawer(),
       appBar: AppBar(
         title: const Text('FarmFlow'),
-        backgroundColor: const Color.fromARGB(255, 195, 245, 197),
+        backgroundColor: const Color.fromARGB(255, 152, 183, 132),
       ),
       body: IndexedStack(
         index: _selectedIndex,

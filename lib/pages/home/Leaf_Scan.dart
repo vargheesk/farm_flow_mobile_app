@@ -24,6 +24,7 @@ class _Leaf_ScanState extends State<Leaf_Scan> {
   final _imagePicker = ImagePicker();
   late Interpreter _interpreter;
   late Interpreter _leafDetector; // New interpreter for leaf detection
+  int noOfClassses = 89;
   List<String> _labels = [];
   // Define a threshold for disease classification confidence
   final double _diseaseConfidenceThreshold = 50.0;
@@ -106,9 +107,9 @@ class _Leaf_ScanState extends State<Leaf_Scan> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Not a Plant Leaf'),
+          title: const Text('No Leaf Detected'),
           content: const Text(
-              'We couldn\'t detect a plant leaf. Please upload an image that clearly shows a plant leaf.'),
+              'We couldn\'t detect a leaf in this. Please upload an image that clearly shows a plant leaf.'),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
@@ -253,7 +254,8 @@ class _Leaf_ScanState extends State<Leaf_Scan> {
         ),
       );
 
-      var outputArray = List.filled(38, 0.0).reshape([1, 38]);
+      var outputArray =
+          List.filled(noOfClassses, 0.0).reshape([1, noOfClassses]);
       _interpreter.run([inputArray], outputArray);
 
       var maxIndex = 0;
@@ -322,7 +324,7 @@ class _Leaf_ScanState extends State<Leaf_Scan> {
   Widget _buildInfoContainer({
     required String title,
     required String content,
-    Color backgroundColor = const Color(0xFFE8DEF8),
+    Color backgroundColor = const Color.fromARGB(255, 251, 255, 252),
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
@@ -453,7 +455,7 @@ class _Leaf_ScanState extends State<Leaf_Scan> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 180, 245, 183),
+      backgroundColor: const Color.fromARGB(255, 170, 191, 163),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -592,7 +594,7 @@ class _Leaf_ScanState extends State<Leaf_Scan> {
                   _buildInfoContainer(
                     title: 'Plant Information:',
                     content: _plantInfo,
-                    backgroundColor: const Color(0xFFF0E6FF),
+                    backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                   ),
               ],
             ],
